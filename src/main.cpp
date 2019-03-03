@@ -114,6 +114,8 @@ int main() {
 
           bool too_close = false;
 
+          vector<int> left_detected_vehicle, right_detected_vehicle;
+
           //find ref_v to use
           for (int i = 0; i < sensor_fusion.size(); ++i)
           {
@@ -138,10 +140,63 @@ int main() {
                   }
 
               }
+              else if(d <= (2+4*lane-2))
+                  left_detected_vehicle.push_back(i);
+              else if(d >= (2+4*lane+2))
+                  right_detected_vehicle.push_back(i);
           }
 
           if(too_close)
           {
+              // lane 0,1,2 = left,middle,right
+              bool left_turn_possible = true;
+              bool right_turn_possible = true;
+              if(lane == 0)
+                  left_turn_possible = false;
+              else if (lane == 2)
+                  right_turn_possible = false;
+
+              if(left_turn_possible)
+              {
+                  for(auto& i : left_detected_vehicle)
+                  {
+                      double vx = sensor_fusion[i][3];
+                      double vy = sensor_fusion[i][4];
+                      double check_speed = sqrt(vx*vx+vy*vy);
+                      double check_car_s = sensor_fusion[i][5];
+
+                      check_car_s += (static_cast<double>(prev_size)*.02*check_speed); // if using previous points ca project s value out
+                      if(abs(check_car_s-car_s) < (check_car_s > car_s ? 30 : 10))
+                      {
+                          left_turn_possible = false;
+                          break;
+                      }
+                  }
+              }
+
+              if(right_turn_possible)
+              {
+                  for(auto& i : right_detected_vehicle)
+                  {
+                      double vx = sensor_fusion[i][3];
+                      double vy = sensor_fusion[i][4];
+                      double check_speed = sqrt(vx*vx+vy*vy);
+                      double check_car_s = sensor_fusion[i][5];
+
+                      check_car_s += (static_cast<double>(prev_size)*.02*check_speed); // if using previous points ca project s value out
+                      if(abs(check_car_s-car_s) < (check_car_s > car_s ? 30 : 10))
+                      {
+                          right_turn_possible = false;
+                          break;
+                      }
+                  }
+              }
+
+              if(left_turn_possible)
+                  lane -= 1;
+              else if(right_turn_possible)
+                  lane += 1;
+
               ref_vel -= .224;
           }
           else if(ref_vel < 49.5)
