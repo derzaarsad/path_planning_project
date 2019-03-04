@@ -140,6 +140,14 @@ that's just a guess.
 One last note here: regardless of the IDE used, every submitted project must
 still be compilable with cmake and make./
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+## Model Documentation
 
+If no obstacle emerges, the reference car aims only to stay on its lane using the maximum allowed top speed which is 49.5 mph. This can be achieved by discretizing the waypoints into many small steps
+and then calculating the required displacement by multiplying the speed with the known sampling rate of 0.02 s. However, in this program some functionalies are added to increase the safety
+and comfort of the driving. First of all, using the information from the sensor fusion module the reference car are checked against all detected cars whether some of them (or one) are inside 30m range in front of it by calculating the s axis difference in frenet coordinate system. If at least one of the cars is too close, the speed of the reference car is reduced and a prepare lane change flag is activated. Simultaneously, the d axis of the detected cars are also checked against the reference car to be able to classify whether the car is on the left or the right side of the reference car.
+These data are then used to analyse whether a change in the desired lane is safe, this is achieved by checking whether there is any car in the desired lane that is too close to the reference car.
+Here different values of minimal distance are applied for cars that is behind or in front of the reference car with respect to the s axis in frenet coordinate system. If the lane is safe to drive,
+a lane change is executed. To minimize jerk and get a smooth curve of waypoints movement, a spline interpolation is used. This is basically done by "adding" reference points to the spline function
+and then the function calculates implicitly a polynomial function that can be used to calculate any target point y by each arbitrary x. In this case the x would be a target distance that is discretized
+into many points with small steps. The reference points that are added to the spline function are the two previous point or the current point of the reference car and also some far points in front of the
+current reference car position.
